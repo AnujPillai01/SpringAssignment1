@@ -37,7 +37,8 @@ public class RestaurantController {
     @PostMapping
     public ResponseEntity<Restaurant> createRestaurant(@RequestBody RestaurantRequest request) {
         // TODO: Implement this method
-        return null;
+        Restaurant createdRestaurant =  restaurantService.createRestaurant(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdRestaurant);
     }
 
     /**
@@ -52,7 +53,8 @@ public class RestaurantController {
     @GetMapping
     public ResponseEntity<List<Restaurant>> getAllRestaurants() {
         // TODO: Implement this method
-        return null;
+        List<Restaurant> list = restaurantService.getAllRestaurants();
+        return ResponseEntity.ok(list);
     }
 
     /**
@@ -67,7 +69,8 @@ public class RestaurantController {
     @GetMapping("/{id}")
     public ResponseEntity<Restaurant> getRestaurantById(@PathVariable Long id) {
         // TODO: Implement this method
-        return null;
+        Restaurant restaurant = restaurantService.getRestaurantById(id);
+        return ResponseEntity.ok(restaurant);
     }
 
     /**
@@ -82,7 +85,8 @@ public class RestaurantController {
     public ResponseEntity<Restaurant> updateRestaurant(@PathVariable Long id,
                                                        @RequestBody RestaurantRequest request) {
         // TODO: Implement this method
-        return null;
+        Restaurant updatedRestaurant = restaurantService.updateRestaurant(id, request);
+        return ResponseEntity.ok(updatedRestaurant);
     }
 
     /**
@@ -97,6 +101,7 @@ public class RestaurantController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRestaurant(@PathVariable Long id) {
         // TODO: Implement this method
-        return null;
+        restaurantService.deleteRestaurant(id);
+        return ResponseEntity.noContent().build();
     }
 }
