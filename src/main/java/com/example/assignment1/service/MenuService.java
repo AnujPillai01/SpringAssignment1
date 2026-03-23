@@ -63,7 +63,32 @@ public class MenuService {
      */
     public MenuResponse createMenu(MenuRequest request) {
         // TODO: Implement this method
-        return null;
+        if(request.getRestaurantId()==null){
+            throw new InvalidRequestException("Restaurant ID cannot be null");
+        }
+
+        if(request.getDate()==null){
+            throw new InvalidRequestException("Menu date cannot be null");
+        }
+
+        if(request.getMealType()==null){
+            throw new InvalidRequestException("Meal type cannot be null");
+        }
+
+        if(request.getMenuItemIds()==null ||  request.getMenuItemIds().isEmpty()){
+            throw new InvalidRequestException("Menu must contain at least one item");
+        }
+
+        restaurantService.getRestaurantById(request.getRestaurantId());
+        request.getMenuItemIds().forEach(menuItemService::getMenuItemById);
+
+        if(menuRepository.findByRestaurantIdAndDateAndMealType(request.getRestaurantId(), request.getDate(), request.getMealType()).isPresent()){
+            throw new DuplicateResourceException("Menu already exists for restaurant " + request.getRestaurantId() + " on " + request.getDate() + " for " + request.getMealType());
+        }
+
+        Menu createdMenu = new Menu(null, request.getRestaurantId(), request.getDate(), request.getMealType(), request.getMenuItemIds());
+        Menu menu = menuRepository.save(createdMenu);
+        return toMenuResponse(menu);
     }
 
     /**
@@ -76,7 +101,8 @@ public class MenuService {
      */
     public MenuResponse getMenuById(Long id) {
         // TODO: Implement this method
-        return null;
+        Menu menu = menuRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Menu not found with id: " + id));
+        return toMenuResponse(menu);
     }
 
     /**
@@ -91,7 +117,7 @@ public class MenuService {
      */
     public List<MenuResponse> getAllMenus() {
         // TODO: Implement this method
-        return null;
+        return menuRepository.findAll().stream().map(menu -> toMenuResponse(menu)).toList();
     }
 
     /**
@@ -104,7 +130,8 @@ public class MenuService {
      */
     public List<MenuResponse> getMenusByRestaurantId(Long restaurantId) {
         // TODO: Implement this method
-        return null;
+        restaurantService.getRestaurantById(restaurantId);
+        return menuRepository.findByRestaurantId(restaurantId).stream().map(menu -> toMenuResponse(menu)).toList();
     }
 
     /**
@@ -116,7 +143,7 @@ public class MenuService {
      */
     public List<MenuResponse> getMenusByDate(LocalDate date) {
         // TODO: Implement this method
-        return null;
+        return menuRepository.findByDate(date).stream().map(menu -> toMenuResponse(menu)).toList();
     }
 
     /**
@@ -129,7 +156,8 @@ public class MenuService {
      */
     public List<MenuResponse> getMenusByRestaurantIdAndDate(Long restaurantId, LocalDate date) {
         // TODO: Implement this method
-        return null;
+        restaurantService.getRestaurantById(restaurantId);
+        return menuRepository.findByRestaurantIdAndDate(restaurantId,date).stream().map(menu -> toMenuResponse(menu)).toList();
     }
 
     /**
@@ -149,7 +177,39 @@ public class MenuService {
      */
     public MenuResponse updateMenu(Long id, MenuRequest request) {
         // TODO: Implement this method
-        return null;
+        Menu menu = menuRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Menu not found with id: " + id));
+        if(request.getRestaurantId()==null){
+            throw new InvalidRequestException("Restaurant ID cannot be null");
+        }
+
+        if(request.getDate()==null){
+            throw new InvalidRequestException("Menu date cannot be null");
+        }
+
+        if(request.getMealType()==null){
+            throw new InvalidRequestException("Meal type cannot be null");
+        }
+
+        if(request.getMenuItemIds()==null ||  request.getMenuItemIds().isEmpty()){
+            throw new InvalidRequestException("Menu must contain at least one item");
+        }
+
+        restaurantService.getRestaurantById(request.getRestaurantId());
+        request.getMenuItemIds().forEach(menuItemService::getMenuItemById);
+
+        menuRepository.findByRestaurantIdAndDateAndMealType(request.getRestaurantId(), request.getDate(),request.getMealType())
+                .ifPresent(existingMenu -> {
+                    if(!menu.getId().equals(existingMenu.getId())){
+                        throw new DuplicateResourceException("Menu already exists for this combo");
+                    }
+                });
+
+        menu.setRestaurantId(request.getRestaurantId());
+        menu.setDate(request.getDate());
+        menu.setMealType(request.getMealType());
+        menu.setMenuItemIds(request.getMenuItemIds());
+        menuRepository.save(menu);
+        return toMenuResponse(menu);
     }
 
     /**
@@ -161,6 +221,8 @@ public class MenuService {
      */
     public void deleteMenu(Long id) {
         // TODO: Implement this method
+        getMenuById(id);
+        menuRepository.deleteById(id);
     }
 
     // ═══════════════════════════════════════════════════════════════
